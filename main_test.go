@@ -47,11 +47,15 @@ func TestRedis_Get(t *testing.T) {
 	defer sut.Disconnect()
 
 	// test
-	result := sut.Get(sutKey)
+	result, resultErr := sut.Get(sutKey)
 
 	// verify
 	if result != sutValue {
 		sorry.Unexpected(t, result, sutValue)
+		t.Fail()
+	}
+	if resultErr != nil {
+		sorry.UnexpectedError(t, resultErr)
 		t.Fail()
 	}
 }

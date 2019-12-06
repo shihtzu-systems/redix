@@ -15,6 +15,7 @@ release:
 	git add --all
 	git commit
 	git tag v$(version)
+	git push origin --tags
 
 stamp:
 	printf "$(version)" > version

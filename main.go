@@ -3,7 +3,6 @@ package redix
 import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-	log "github.com/sirupsen/logrus"
 )
 
 type Redis struct {
@@ -14,67 +13,60 @@ type Redis struct {
 	connection redis.Conn
 }
 
-func (r *Redis) Connect() {
+func (r *Redis) Connect() error {
 	dial := fmt.Sprintf("%s:%v", r.Address, r.Port)
-	log.Debugf("redis: %s [%d]", dial, r.Database)
 	conn, err := redis.Dial("tcp", dial, redis.DialDatabase(r.Database))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	r.connection = conn
+	return nil
 }
 
-func (r *Redis) Disconnect() {
+func (r *Redis) Disconnect() error {
 	if err := r.connection.Close(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	r.connection = nil
+	return nil
 }
 
-func (r Redis) Exists(key string) bool {
+func (r Redis) Exists(key string) (bool, error) {
 	reply, err := r.connection.Do("Exists", key)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
-	return reply.(int64) == int64(1)
+	return reply.(int64) == int64(1), nil
 }
 
-func (r Redis) Set(key string, jsonValue []byte) {
-	reply, err := r.connection.Do("SET", key, jsonValue)
-	log.Debug(reply)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (r Redis) Set(key string, jsonValue []byte) (interface{}, error) {
+	return r.connection.Do("SET", key, jsonValue)
 }
 
-func (r Redis) HSet(key, field string, jsonValue []byte) {
-	reply, err := r.connection.Do("HSET", key, field, jsonValue)
-	log.Debug(reply)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (r Redis) HSet(key, field string, jsonValue []byte) (interface{}, error) {
+	return r.connection.Do("HSET", key, field, jsonValue)
 }
 
-func (r Redis) Get(key string) (out string) {
+func (r Redis) Get(key string) (out string, err error) {
 	reply, err := r.connection.Do("GET", key)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	if reply == nil {
-		return ""
+		return "", nil
 	} else {
-		return string(reply.([]byte))
+		return string(reply.([]byte)), nil
 	}
 }
 
-func (r Redis) HGet(key, field string) (out string) {
+func (r Redis) HGet(key, field string) (out string, err error) {
 	reply, err := r.connection.Do("HGET", key, field)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	if reply == nil {
-		return ""
+		return "", nil
 	} else {
-		return string(reply.([]byte))
+		return string(reply.([]byte)), nil
 	}
 }
