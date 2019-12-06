@@ -1,3 +1,5 @@
+version := $(shell cat $$HOME/git/redix/version)
+
 build: fmt vet test
 
 fmt:
@@ -8,3 +10,11 @@ vet:
 
 test:
 	go test ./...
+
+release:
+	git add --all
+	git commit
+	git tag v$(version)
+
+stamp:
+	printf "$(version)" > version
